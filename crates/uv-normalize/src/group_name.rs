@@ -144,7 +144,7 @@ impl Serialize for PipGroupName {
 }
 
 impl Display for PipGroupName {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let path = self.path.to_string_lossy();
         if path == "pyproject.toml" {
             self.name.fmt(f)
