@@ -5533,7 +5533,7 @@ Compile a `requirements.in` file to a `requirements.txt` file
 <h3 class="cli-reference">Usage</h3>
 
 ```
-uv pip compile [OPTIONS] <SRC_FILE>...
+uv pip compile [OPTIONS] <SRC_FILE|--group <GROUP>>
 ```
 
 <h3 class="cli-reference">Arguments</h3>
@@ -5677,6 +5677,12 @@ uv pip compile [OPTIONS] <SRC_FILE>...
 <li><code>requires-python</code>:  Optimize for selecting latest supported version of each package, for each supported Python version</li>
 </ul>
 </dd><dt id="uv-pip-compile--generate-hashes"><a href="#uv-pip-compile--generate-hashes"><code>--generate-hashes</code></a></dt><dd><p>Include distribution hashes in the output file</p>
+
+</dd><dt id="uv-pip-compile--group"><a href="#uv-pip-compile--group"><code>--group</code></a> <i>group</i></dt><dd><p>Install the specified dependency group in the specified pyproject.toml</p>
+
+<p>If no path is provided, ./pyproject.toml is used.</p>
+
+<p>May be provided multiple times.</p>
 
 </dd><dt id="uv-pip-compile--help"><a href="#uv-pip-compile--help"><code>--help</code></a>, <code>-h</code></dt><dd><p>Display the concise help for this command</p>
 
@@ -6552,7 +6558,9 @@ uv pip install [OPTIONS] <PACKAGE|--requirements <REQUIREMENTS>|--editable <EDIT
 
 <li><code>requires-python</code>:  Optimize for selecting latest supported version of each package, for each supported Python version</li>
 </ul>
-</dd><dt id="uv-pip-install--group"><a href="#uv-pip-install--group"><code>--group</code></a> <i>group</i></dt><dd><p>Ignore the package and it&#8217;s dependencies, only install from the specified dependency group.</p>
+</dd><dt id="uv-pip-install--group"><a href="#uv-pip-install--group"><code>--group</code></a> <i>group</i></dt><dd><p>Install the specified dependency group in the specified pyproject.toml</p>
+
+<p>If no path is provided, ./pyproject.toml is used.</p>
 
 <p>May be provided multiple times.</p>
 

@@ -949,6 +949,7 @@ fn parse_maybe_string(input: &str) -> Result<Maybe<String>, String> {
 
 #[derive(Args)]
 #[allow(clippy::struct_excessive_bools)]
+#[command(group = clap::ArgGroup::new("sources").required(true).multiple(true))]
 pub struct PipCompileArgs {
     /// Include all packages listed in the given `requirements.in` files.
     ///
@@ -959,7 +960,7 @@ pub struct PipCompileArgs {
     ///
     /// The order of the requirements files and the requirements in them is used to determine
     /// priority during resolution.
-    #[arg(required(true), value_parser = parse_file_path)]
+    #[arg(group = "sources", value_parser = parse_file_path)]
     pub src_file: Vec<PathBuf>,
 
     /// Constrain versions using the given requirements files.
