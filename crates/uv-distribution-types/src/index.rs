@@ -82,6 +82,44 @@ pub struct Index {
     /// publish-url = "https://upload.pypi.org/legacy/"
     /// ```
     pub publish_url: Option<Url>,
+    /// The authentication mode for the index.
+    ///
+    /// All requests made to URLs with this index url as a prefix will follow
+    /// the policy corresponding to this authentication mode.
+    ///
+    /// ```toml
+    /// [[tool.uv.index]]
+    /// name = "my-index"
+    /// url = "https://<omitted>/simple"
+    /// auth_mode = "always"
+    /// ```
+    #[serde(default)]
+    pub auth_mode: AuthMode,
+}
+
+#[derive(
+    Copy, Clone, Debug, Default, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "kebab-case")]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub enum AuthMode {
+    /// Authenticate only when necessary.
+    #[default]
+    Auto,
+    /// Always authenticate.
+    Always,
+    /// Never authenticate.
+    Never,
+}
+
+impl From<AuthMode> for uv_auth::AuthMode {
+    fn from(item: AuthMode) -> Self {
+        match item {
+            AuthMode::Always => uv_auth::AuthMode::Always,
+            AuthMode::Auto => uv_auth::AuthMode::Auto,
+            AuthMode::Never => uv_auth::AuthMode::Never,
+        }
+    }
 }
 
 // #[derive(
@@ -106,6 +144,7 @@ impl Index {
             default: true,
             origin: None,
             publish_url: None,
+            auth_mode: AuthMode::Auto,
         }
     }
 
@@ -118,6 +157,7 @@ impl Index {
             default: false,
             origin: None,
             publish_url: None,
+            auth_mode: AuthMode::Auto,
         }
     }
 
@@ -130,6 +170,7 @@ impl Index {
             default: false,
             origin: None,
             publish_url: None,
+            auth_mode: AuthMode::Auto,
         }
     }
 
@@ -216,6 +257,7 @@ impl FromStr for Index {
                     default: false,
                     origin: None,
                     publish_url: None,
+                    auth_mode: AuthMode::Auto,
                 });
             }
         }
@@ -229,6 +271,7 @@ impl FromStr for Index {
             default: false,
             origin: None,
             publish_url: None,
+            auth_mode: AuthMode::Auto,
         })
     }
 }

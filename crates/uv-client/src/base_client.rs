@@ -13,7 +13,7 @@ use std::time::Duration;
 use std::{env, iter};
 use tracing::{debug, trace};
 use url::Url;
-use uv_auth::AuthMiddleware;
+use uv_auth::{AuthMiddleware, UrlAuthModes};
 use uv_configuration::{KeyringProviderType, TrustedHost};
 use uv_fs::Simplified;
 use uv_pep508::MarkerEnvironment;
@@ -54,6 +54,7 @@ pub struct BaseClientBuilder<'a> {
     markers: Option<&'a MarkerEnvironment>,
     platform: Option<&'a Platform>,
     auth_integration: AuthIntegration,
+    url_auth_modes: Option<UrlAuthModes>,
     default_timeout: Duration,
     extra_middleware: Option<ExtraMiddleware>,
 }
@@ -88,6 +89,7 @@ impl BaseClientBuilder<'_> {
             markers: None,
             platform: None,
             auth_integration: AuthIntegration::default(),
+            url_auth_modes: None,
             default_timeout: Duration::from_secs(30),
             extra_middleware: None,
         }
@@ -146,6 +148,12 @@ impl<'a> BaseClientBuilder<'a> {
     #[must_use]
     pub fn auth_integration(mut self, auth_integration: AuthIntegration) -> Self {
         self.auth_integration = auth_integration;
+        self
+    }
+
+    #[must_use]
+    pub fn url_auth_modes(mut self, auth_modes: UrlAuthModes) -> Self {
+        self.url_auth_modes = Some(auth_modes);
         self
     }
 
@@ -228,8 +236,9 @@ impl<'a> BaseClientBuilder<'a> {
         );
 
         // Wrap in any relevant middleware and handle connectivity.
-        let client = self.apply_middleware(raw_client.clone());
-        let dangerous_client = self.apply_middleware(raw_dangerous_client.clone());
+        let client = self.apply_middleware(raw_client.clone(), self.url_auth_modes.as_ref());
+        let dangerous_client =
+            self.apply_middleware(raw_dangerous_client.clone(), self.url_auth_modes.as_ref());
 
         BaseClient {
             connectivity: self.connectivity,
@@ -246,8 +255,12 @@ impl<'a> BaseClientBuilder<'a> {
     /// Share the underlying client between two different middleware configurations.
     pub fn wrap_existing(&self, existing: &BaseClient) -> BaseClient {
         // Wrap in any relevant middleware and handle connectivity.
-        let client = self.apply_middleware(existing.raw_client.clone());
-        let dangerous_client = self.apply_middleware(existing.raw_dangerous_client.clone());
+        let client =
+            self.apply_middleware(existing.raw_client.clone(), self.url_auth_modes.as_ref());
+        let dangerous_client = self.apply_middleware(
+            existing.raw_dangerous_client.clone(),
+            self.url_auth_modes.as_ref(),
+        );
 
         BaseClient {
             connectivity: self.connectivity,
@@ -306,7 +319,11 @@ impl<'a> BaseClientBuilder<'a> {
             .expect("Failed to build HTTP client.")
     }
 
-    fn apply_middleware(&self, client: Client) -> ClientWithMiddleware {
+    fn apply_middleware(
+        &self,
+        client: Client,
+        url_auth_modes: Option<&UrlAuthModes>,
+    ) -> ClientWithMiddleware {
         match self.connectivity {
             Connectivity::Online => {
                 let mut client = reqwest_middleware::ClientBuilder::new(client);
@@ -324,8 +341,13 @@ impl<'a> BaseClientBuilder<'a> {
                 // Initialize the authentication middleware to set headers.
                 match self.auth_integration {
                     AuthIntegration::Default => {
-                        client = client
-                            .with(AuthMiddleware::new().with_keyring(self.keyring.to_provider()));
+                        let mut auth_middleware =
+                            AuthMiddleware::new().with_keyring(self.keyring.to_provider());
+                        if let Some(url_auth_modes) = url_auth_modes {
+                            auth_middleware =
+                                auth_middleware.with_url_auth_modes(url_auth_modes.clone());
+                        }
+                        client = client.with(auth_middleware);
                     }
                     AuthIntegration::OnlyAuthenticated => {
                         client = client.with(

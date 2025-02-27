@@ -7,6 +7,8 @@ use cache::CredentialsCache;
 pub use credentials::Credentials;
 pub use keyring::KeyringProvider;
 pub use middleware::AuthMiddleware;
+pub use middleware::AuthMode;
+pub use middleware::UrlAuthModes;
 use realm::Realm;
 
 mod cache;
